@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "allowUnusedLabels": false,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "noEmitHelpers": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2017",
+    "outDir": "./build",
+    "declaration": true,
+    "declarationMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "typeRoots": [
+      "node_modules/@types"
+    ]
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

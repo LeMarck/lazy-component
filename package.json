@@ -1,0 +1,40 @@
+{
+  "name": "lazy-component",
+  "version": "1.0.0",
+  "description": "",
+  "author": "Evgeny Petrov <jeysonep@gmail.com>",
+  "license": "MIT",
+  "main": "build/index.js",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LeMarck/lazy-component.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LeMarck/lazy-component/issues"
+  },
+  "homepage": "https://github.com/LeMarck/lazy-component",
+  "keywords": [
+    "react",
+    "lazy",
+    "pre-render"
+  ],
+  "files": [
+    "build",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.3",
+    "@types/react-router": "^5.1.13",
+    "typescript": "^4.2.3"
+  },
+  "dependencies": {
+    "history": "^4.10.1",
+    "react": "^17.0.2",
+    "react-router": "^5.2.0"
+  }
+}
