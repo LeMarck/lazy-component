@@ -25,11 +25,15 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc"
+    "build": "rm -rf build && tsc"
   },
   "devDependencies": {
     "@types/react": "^17.0.3",
     "@types/react-router": "^5.1.13",
+    "@typescript-eslint/eslint-plugin": "^4.21.0",
+    "@typescript-eslint/parser": "^4.21.0",
+    "eslint": "^7.23.0",
+    "eslint-plugin-react": "^7.23.1",
     "typescript": "^4.2.3"
   },
   "dependencies": {
