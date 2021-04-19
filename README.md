@@ -1,5 +1,10 @@
 # Lazy Component
 
+[![Build Status](https://www.travis-ci.com/LeMarck/lazy-page.svg?branch=master)](https://www.travis-ci.com/LeMarck/lazy-page)
+[![Coverage Status](https://coveralls.io/repos/github/LeMarck/lazy-page/badge.svg?branch=master)](https://coveralls.io/github/LeMarck/lazy-page?branch=master)
+
+Create a lazy loading page wrapper
+
 ## Config
 
 **components/Loading.component.tsx**
@@ -46,3 +51,7 @@ export const App = (): JSX.Element => <BrowserRouter>
   </Switch>
 </BrowserRouter>;
 ```
+
+## License
+
+[MIT License](LICENSE)

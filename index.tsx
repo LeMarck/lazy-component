@@ -26,7 +26,7 @@ enum LazyPageState {
   ERROR
 }
 
-type State<Props extends TProps> =
+type PageState<Props extends TProps> =
   | { state: LazyPageState.LOADING }
   | { state: LazyPageState.ERROR; error: Error }
   | { state: LazyPageState.SUCCESS; Component: ComponentType<Props> } & GetInitPropsResult<Props>;
@@ -34,7 +34,7 @@ type State<Props extends TProps> =
 export const createLazyPage = (config: LazyPageConfig) =>
   <Props extends TProps, Params extends TParams = TParams>(factory: () => Promise<LazyPage<Props, Params>>): ComponentType =>
     memo(() => {
-      const [state, setDynamicState] = useState<State<Props>>({ state: LazyPageState.LOADING });
+      const [state, setDynamicState] = useState<PageState<Props>>({ state: LazyPageState.LOADING });
       const params = useParams<Params>();
       const location = useLocation<unknown>();
 
