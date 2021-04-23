@@ -1,39 +1,43 @@
-# Lazy Component
+# React Lazy Page
 
 [![Build Status](https://www.travis-ci.com/LeMarck/lazy-page.svg?branch=master)](https://www.travis-ci.com/LeMarck/lazy-page)
 [![Coverage Status](https://coveralls.io/repos/github/LeMarck/lazy-page/badge.svg?branch=master)](https://coveralls.io/github/LeMarck/lazy-page?branch=master)
 
-Create a lazy loading page wrapper
+[React.lazy](https://ru.reactjs.org/docs/code-splitting.html) alternative for pages with data fetching
 
-## Config
+## Page
 
-**components/Loading.component.tsx**
+**Page** is a [React Component](https://reactjs.org/docs/components-and-props.html) exported from a `.js`, `.jsx`, `.ts`
+, or `.tsx`
+
+**pages/About.page.tsx**
 
 ```tsx
-export const LoadingComponent = (): JSX.Element =>
-  <div>Loading...</div>;
+const About = () => <div>About</div>;
+
+export default About;
 ```
 
-**components/Error.component.tsx**
+## Data Fetching
+
+**pages/Blog.page.tsx**
 
 ```tsx
-export const ErrorComponent = ({ error }: { error: Error }): JSX.Element =>
-  <div>
-    <h1>{error.name}</h1>
-    <p>{error.message}</p>
-  </div>
-```
 
-**utils/lazyPage.tsx**
+const Blog = ({ posts }) => <ul>
+  {posts.map((post) => (
+    <li>{post.title}</li>
+  ))}
+</ul>;
 
-```tsx
-import { LoadingComponent, ErrorComponent } from 'src/components';
-import { createLazyPage } from 'lazy-page';
+export async function getStaticProps() {
+  const res = await fetch('https://.../posts')
+  const posts = await res.json()
 
-export const lazyPage = createLazyPage({
-  LoadingComponent,
-  ErrorComponent
-});
+  return { props: { posts } };
+}
+
+export default Blog
 ```
 
 ## Usage
@@ -42,15 +46,23 @@ export const lazyPage = createLazyPage({
 
 ```tsx
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import { lazyPage } from './utils';
+import { lazyPage } from 'react-lazy-page';
+import { Suspense } from 'react';
 
 export const App = (): JSX.Element => <BrowserRouter>
-  <Switch>
-    <Route path={'/'} component={lazyPage(() => import('/pages/MainPage'))} exact/>
-    <Route path={'/about'} component={lazyPage(() => import('/pages/AboutPage'))} exact/>
-  </Switch>
+  <Suspense fallback={<div>Loading...</div>}>
+    <Switch>
+      <Route path={'/about'} component={lazyPage(() => import('./pages/About.page'))} exact/>
+      <Route path={'/blog'} component={lazyPage(() => import('./pages/Blog.page'))} exact/>
+    </Switch>
+  </Suspense>
 </BrowserRouter>;
 ```
+
+## Inspiration
+
+* [Next.js – Pages](https://nextjs.org/docs/basic-features/pages)
+* [Next.js – Data Fetching](https://nextjs.org/docs/basic-features/data-fetching)
 
 ## License
 

@@ -1,60 +1,61 @@
-import { ComponentType, memo, useEffect, useState } from 'react';
 import { LocationDescriptor, Location, LocationState } from 'history';
+import { ComponentType, memo } from 'react';
 import { Redirect, useLocation, useParams } from 'react-router';
 
-type TProps = Record<string, unknown>;
-type TParams = Record<string, string>;
-
-interface LazyPageConfig {
-  LoadingComponent: ComponentType;
-  ErrorComponent: ComponentType<{ error: Error }>;
-}
-
-export type GetInitPropsContext<Params extends TParams, State = LocationState> = { params: Params } & Location<State>;
-export type GetInitPropsResult<Props extends TProps> = { props: Props } | { redirect: LocationDescriptor };
-export type GetInitialProps<Props extends TProps = TProps, Params extends TParams = TParams> =
+export type GetInitPropsContext<Params = Record<string, unknown>, State = LocationState> = Location<State> & {
+  params: Params;
+};
+export type GetInitPropsResult<Props> = { props: Props } | { redirect: LocationDescriptor };
+export type GetInitialProps<Props = Record<string, unknown>, Params = Record<string, string>> =
   <State>(ctx: GetInitPropsContext<Params, State>) => Promise<GetInitPropsResult<Props>>;
 
-export interface LazyPage<Props extends TProps, Params extends TParams = TParams> {
+export interface ILazyPage<Props, Params = Record<string, string>> {
   default: ComponentType<Props>;
   getInitialProps?: GetInitialProps<Props, Params>;
 }
 
-enum LazyPageState {
+enum PageState {
   LOADING,
   SUCCESS,
   ERROR
 }
 
-type PageState<Props extends TProps> =
-  | { state: LazyPageState.LOADING }
-  | { state: LazyPageState.ERROR; error: Error }
-  | { state: LazyPageState.SUCCESS; Component: ComponentType<Props> } & GetInitPropsResult<Props>;
+type LazyPageState<Props> =
+  | { state: PageState.LOADING }
+  | { state: PageState.ERROR; error: Error }
+  | { state: PageState.SUCCESS; Component: ComponentType<Props> } & GetInitPropsResult<Props>;
 
-export const createLazyPage = (config: LazyPageConfig) =>
-  <Props extends TProps, Params extends TParams = TParams>(factory: () => Promise<LazyPage<Props, Params>>): ComponentType =>
-    memo(() => {
-      const [state, setDynamicState] = useState<PageState<Props>>({ state: LazyPageState.LOADING });
-      const params = useParams<Params>();
-      const location = useLocation<unknown>();
+/**
+ * Ленивая загрузка страницы с предзагрузкой данных в getInitialProps
+ * @param factory
+ */
+export function lazyPage<Props, Params = Record<string, string>>(
+  factory: () => Promise<ILazyPage<Props, Params>>
+): ComponentType {
+  let state: LazyPageState<Props> = { state: PageState.LOADING };
 
-      useEffect(() => {
-        (async function loading(): Promise<void> {
-          try {
-            const { default: Component, getInitialProps } = await factory();
-            const props = getInitialProps
-              ? await getInitialProps({ ...location, params })
-              : { props: {} } as GetInitPropsResult<Props>;
+  return memo(function Page(): JSX.Element {
+    const params = useParams<Params>() as Params;
+    const location = useLocation();
 
-            setDynamicState({ state: LazyPageState.SUCCESS, Component, ...props });
-          } catch (error) {
-            setDynamicState({ state: LazyPageState.ERROR, error });
-          }
-        }());
-      }, [params, location]);
+    if (state.state === PageState.LOADING) {
+      throw (async function loading(): Promise<void> {
+        window.history.replaceState(undefined, document.title); // Чтобы стейт не сохранялся при перезагрузке
 
-      if (state.state === LazyPageState.LOADING) return <config.LoadingComponent/>;
-      if (state.state === LazyPageState.ERROR) return <config.ErrorComponent error={state.error}/>;
-      if ('redirect' in state) return <Redirect to={state.redirect}/>;
-      return <state.Component {...state.props}/>;
-    });
+        try {
+          const { default: Component, getInitialProps } = await factory();
+          const props = getInitialProps
+            ? await getInitialProps({ params, ...location })
+            : { props: {} } as unknown as GetInitPropsResult<Props>;
+
+          state = { state: PageState.SUCCESS, Component, ...props };
+        } catch (error) {
+          state = { state: PageState.ERROR, error };
+        }
+      }());
+    }
+    if (state.state === PageState.ERROR) throw state.error;
+    if ('redirect' in state) return <Redirect to={state.redirect}/>;
+    return <state.Component {...state.props}/>;
+  });
+}

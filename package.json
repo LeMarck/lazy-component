@@ -1,7 +1,7 @@
 {
-  "name": "lazy-page",
+  "name": "react-lazy-page",
   "version": "1.0.0",
-  "description": "Create a lazy loading page wrapper",
+  "description": "React.lazy alternative for pages with data fetching",
   "author": "Evgeny Petrov <jeysonep@gmail.com>",
   "license": "MIT",
   "main": "build/index.js",

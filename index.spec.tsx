@@ -1,22 +1,45 @@
+import { PureComponent, ReactNode, Suspense as ReactSuspense } from 'react';
 import { render, screen } from '@testing-library/react';
-import React from 'react';
 import { MemoryRouter, Route } from 'react-router';
-import { createLazyPage } from './index';
+import { lazyPage } from './index';
 
-const LoadingComponent = (): JSX.Element =>
-  <div data-testid={'LoadingComponent'}>Loading...</div>;
-const ErrorComponent = ({ error }: { error: Error }): JSX.Element =>
-  <div data-testid={'ErrorComponent'}>{error.message}</div>;
+class Wrapper extends PureComponent<{ children: ReactNode }> {
+  state: { error?: Error } = {};
+
+  static getDerivedStateFromError(error: Error): { error?: Error } {
+    return { error };
+  }
+
+  render(): ReactNode {
+    if (this.state.error) {
+      return <div data-testid={'ErrorComponent'}>{this.state.error.message}</div>;
+    }
+
+    return <ReactSuspense fallback={<div data-testid={'LoadingComponent'}>Loading...</div>}>
+      {this.props.children}
+    </ReactSuspense>;
+  }
+}
+
 const ContentComponent = ({ message = 'DefaultMessage' }: { message: string }): JSX.Element =>
   <div data-testid={'ContentComponent'}>{message}</div>;
 
-const lazyPage = createLazyPage({ LoadingComponent, ErrorComponent });
+describe('lazyPage', () => {
+  let spy: jest.SpyInstance;
 
-describe('LazyPage', () => {
-  test('Should render the "ContentComponent" component with default message', async () => {
+  beforeAll(() => {
+    spy = jest.spyOn(console, 'error').mockImplementation(() => { /* */
+    });
+  });
+
+  afterAll(() => {
+    spy.mockRestore();
+  });
+
+  it('Should render the "ContentComponent" component with default message', async () => {
     const Component = lazyPage(() => Promise.resolve({ default: ContentComponent }));
 
-    render(<Component/>, { wrapper: MemoryRouter });
+    render(<Wrapper><Component/></Wrapper>, { wrapper: MemoryRouter });
 
     expect(screen.queryByTestId('LoadingComponent')).toBeInTheDocument();
 
@@ -26,14 +49,14 @@ describe('LazyPage', () => {
     expect(contentComponent.textContent).toEqual('DefaultMessage');
   });
 
-  test('Should render the "ContentComponent" component with custom message', async () => {
+  it('Should render the "ContentComponent" component with custom message', async () => {
     const Component = lazyPage(() => Promise.resolve({
       default: ContentComponent,
       getInitialProps: async () => ({ props: { message: 'TestMessage' } })
     }));
 
 
-    render(<Component/>, { wrapper: MemoryRouter });
+    render(<Wrapper><Component/></Wrapper>, { wrapper: MemoryRouter });
 
     expect(screen.queryByTestId('LoadingComponent')).toBeInTheDocument();
 
@@ -46,13 +69,13 @@ describe('LazyPage', () => {
   test('Should render the "ErrorComponent" component with Error message', async () => {
     const Component = lazyPage(() => Promise.resolve({
       default: ContentComponent,
-      getInitialProps: async () => {
+      getInitialProps: () => {
         throw Error('TestError');
       }
     }));
 
 
-    render(<Component/>, { wrapper: MemoryRouter });
+    render(<Wrapper><Component/></Wrapper>, { wrapper: MemoryRouter });
 
     expect(screen.queryByTestId('LoadingComponent')).toBeInTheDocument();
 
@@ -62,17 +85,20 @@ describe('LazyPage', () => {
     expect(errorComponent.textContent).toEqual('TestError');
   });
 
-  test('Должен вызвать редирект на страницу /test', async () => {
+  test('Should cause a redirect to the "/test" page', async () => {
     const Component = lazyPage(() => Promise.resolve({
       default: ContentComponent,
       getInitialProps: async () => ({ redirect: '/test' })
     }));
 
 
-    render(<MemoryRouter>
-      <Route path={'/'} exact component={Component}/>);
-      <Route path={'/test'} exact render={() => <ContentComponent message={'RedirectMessage'}/>}/>
-    </MemoryRouter>);
+    render(
+      <Wrapper>
+        <Route path={'/'} exact component={Component}/>);
+        <Route path={'/test'} exact render={() => <ContentComponent message={'RedirectMessage'}/>}/>
+      </Wrapper>,
+      { wrapper: MemoryRouter }
+    );
 
     expect(screen.queryByTestId('LoadingComponent')).toBeInTheDocument();
 
