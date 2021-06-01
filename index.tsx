@@ -22,7 +22,7 @@ enum PageState {
 
 type LazyPageState<Props> =
   | { state: PageState.LOADING }
-  | { state: PageState.ERROR; error: Error }
+  | { state: PageState.ERROR; error: unknown }
   | { state: PageState.SUCCESS; Component: ComponentType<Props> } & GetInitPropsResult<Props>;
 
 /**
@@ -32,11 +32,13 @@ type LazyPageState<Props> =
 export function lazyPage<Props, Params = Record<string, string>>(
   factory: () => Promise<ILazyPage<Props, Params>>
 ): ComponentType {
-  let state: LazyPageState<Props> = { state: PageState.LOADING };
+  const stack: Array<LazyPageState<Props>> = [];
 
   return memo(function Page(): JSX.Element {
     const params = useParams<Params>() as Params;
     const location = useLocation();
+
+    const state = stack.pop() || { state: PageState.LOADING };
 
     if (state.state === PageState.LOADING) {
       throw (async function loading(): Promise<void> {
@@ -44,13 +46,12 @@ export function lazyPage<Props, Params = Record<string, string>>(
 
         try {
           const { default: Component, getInitialProps } = await factory();
-          const props = getInitialProps
-            ? await getInitialProps({ params, ...location })
-            : { props: {} } as unknown as GetInitPropsResult<Props>;
+          const props = getInitialProps ? await getInitialProps({ params, ...location }) : { props: {} };
 
-          state = { state: PageState.SUCCESS, Component, ...props };
-        } catch (error) {
-          state = { state: PageState.ERROR, error };
+          stack.push({ state: PageState.SUCCESS, Component, ...props as GetInitPropsResult<Props> });
+        } catch (error: unknown) {
+          const nextState: LazyPageState<Props> = { state: PageState.ERROR, error };
+          stack.push(nextState, nextState); // При ошибках идёт двойной ререндер. Не занаю почему(((
         }
       }());
     }

@@ -5,6 +5,13 @@
 
 [React.lazy](https://ru.reactjs.org/docs/code-splitting.html) alternative for pages with data fetching
 
+## Dependencies
+
+This is a very bad pattern when there is a connection with one library that can be replaced with another, but so far this is the case. Sorry
+
+* [**react-router**](https://reactrouter.com/web/guides/quick-start)
+* [**history**](https://github.com/ReactTraining/history)
+
 ## Page
 
 **Page** is a [React Component](https://reactjs.org/docs/components-and-props.html) exported from a `.js`, `.jsx`, `.ts`
@@ -61,9 +68,9 @@ export const App = (): JSX.Element => <BrowserRouter>
 
 ## Inspiration
 
-* [Next.js – Pages](https://nextjs.org/docs/basic-features/pages)
-* [Next.js – Data Fetching](https://nextjs.org/docs/basic-features/data-fetching)
+* [**Next.js – Pages**](https://nextjs.org/docs/basic-features/pages)
+* [**Next.js – Data Fetching**](https://nextjs.org/docs/basic-features/data-fetching)
 
 ## License
 
-[MIT License](LICENSE)
+[**MIT License**](LICENSE)
