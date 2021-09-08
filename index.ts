@@ -1,5 +1,5 @@
 import { LocationDescriptor, Location, LocationState } from 'history';
-import { ComponentType, memo } from 'react';
+import { ComponentType, createElement, memo } from 'react';
 import { Redirect, useLocation, useParams } from 'react-router';
 
 export type GetInitPropsContext<Params = Record<string, unknown>, State = LocationState> = Location<State> & {
@@ -25,10 +25,6 @@ type LazyPageState<Props> =
   | { state: PageState.ERROR; error: unknown }
   | { state: PageState.SUCCESS; Component: ComponentType<Props> } & GetInitPropsResult<Props>;
 
-/**
- * Ленивая загрузка страницы с предзагрузкой данных в getInitialProps
- * @param factory
- */
 export function lazyPage<Props, Params = Record<string, string>>(
   factory: () => Promise<ILazyPage<Props, Params>>
 ): ComponentType {
@@ -37,12 +33,12 @@ export function lazyPage<Props, Params = Record<string, string>>(
   return memo(function Page(): JSX.Element {
     const params = useParams<Params>() as Params;
     const location = useLocation();
-
     const state = stack.pop() || { state: PageState.LOADING };
+
+    window.history.replaceState(undefined, document.title);
 
     if (state.state === PageState.LOADING) {
       throw (async function loading(): Promise<void> {
-        window.history.replaceState(undefined, document.title); // Чтобы стейт не сохранялся при перезагрузке
 
         try {
           const { default: Component, getInitialProps } = await factory();
@@ -51,12 +47,12 @@ export function lazyPage<Props, Params = Record<string, string>>(
           stack.push({ state: PageState.SUCCESS, Component, ...props as GetInitPropsResult<Props> });
         } catch (error: unknown) {
           const nextState: LazyPageState<Props> = { state: PageState.ERROR, error };
-          stack.push(nextState, nextState); // При ошибках идёт двойной ререндер. Не занаю почему(((
+          stack.push(nextState, nextState);
         }
       }());
     }
     if (state.state === PageState.ERROR) throw state.error;
-    if ('redirect' in state) return <Redirect to={state.redirect}/>;
-    return <state.Component {...state.props}/>;
+    if ('redirect' in state) return createElement(Redirect, { to: state.redirect });
+    return createElement(state.Component, state.props);
   });
 }

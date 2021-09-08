@@ -1,16 +1,9 @@
-# React Lazy Page
+# React Router Lazy Page
 
-[![Build Status](https://www.travis-ci.com/LeMarck/lazy-page.svg?branch=master)](https://www.travis-ci.com/LeMarck/lazy-page)
-[![Coverage Status](https://coveralls.io/repos/github/LeMarck/lazy-page/badge.svg?branch=master)](https://coveralls.io/github/LeMarck/lazy-page?branch=master)
+[![Build Status](https://app.travis-ci.com/LeMarck/react-router-lazy-page.svg?branch=master)](https://app.travis-ci.com/LeMarck/react-router-lazy-page)
+[![Coverage Status](https://coveralls.io/repos/github/LeMarck/react-router-lazy-page/badge.svg?branch=master)](https://coveralls.io/github/LeMarck/react-router-lazy-page?branch=master)
 
 [React.lazy](https://ru.reactjs.org/docs/code-splitting.html) alternative for pages with data fetching
-
-## Dependencies
-
-This is a very bad pattern when there is a connection with one library that can be replaced with another, but so far this is the case. Sorry
-
-* [**react-router**](https://reactrouter.com/web/guides/quick-start)
-* [**history**](https://github.com/ReactTraining/history)
 
 ## Page
 
@@ -24,6 +17,8 @@ const About = () => <div>About</div>;
 
 export default About;
 ```
+
+[**Next.js – Pages**](https://nextjs.org/docs/basic-features/pages)
 
 ## Data Fetching
 
@@ -47,6 +42,8 @@ export async function getStaticProps() {
 export default Blog
 ```
 
+[**Next.js – Data Fetching**](https://nextjs.org/docs/basic-features/data-fetching)
+
 ## Usage
 
 **App.tsx**
@@ -66,10 +63,10 @@ export const App = (): JSX.Element => <BrowserRouter>
 </BrowserRouter>;
 ```
 
-## Inspiration
+## TODO
 
-* [**Next.js – Pages**](https://nextjs.org/docs/basic-features/pages)
-* [**Next.js – Data Fetching**](https://nextjs.org/docs/basic-features/data-fetching)
+- [ ] Write **documentation**
+- [ ] **Publish** a package
 
 ## License
 
