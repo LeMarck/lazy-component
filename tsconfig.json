@@ -6,12 +6,10 @@
     "module": "esnext",
     "moduleResolution": "node",
     "noEmitHelpers": true,
-    "sourceMap": true,
     "strict": true,
     "target": "es2021",
     "outDir": "./build",
     "declaration": true,
-    "declarationMap": true,
     "forceConsistentCasingInFileNames": true,
     "typeRoots": [
       "node_modules/@types"
