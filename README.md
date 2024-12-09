@@ -1,72 +1,97 @@
 # React Router Lazy Page
 
-[![Build Status](https://app.travis-ci.com/LeMarck/react-router-lazy-page.svg?branch=master)](https://app.travis-ci.com/LeMarck/react-router-lazy-page)
+![GitHub Action Status](https://github.com/LeMarck/react-router-lazy-page/actions/workflows/test.yaml/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/LeMarck/react-router-lazy-page/badge.svg?branch=master)](https://coveralls.io/github/LeMarck/react-router-lazy-page?branch=master)
 
-[React.lazy](https://ru.reactjs.org/docs/code-splitting.html) alternative for pages with data fetching
+> Используется в связке с `react-router@5`
+>
+> В `react-router@>=6` появились `clientLoader/loader` для загрузки данных
 
-## Page
+HOC для загрузки данных на страницу
 
-**Page** is a [React Component](https://reactjs.org/docs/components-and-props.html) exported from a `.js`, `.jsx`, `.ts`
-, or `.tsx`
+## Альтернативы
 
-**pages/About.page.tsx**
+Стразу же укажу альтернативы, хотя это решение использовалось в боевом проекте (сейчас его судьба мне не известна, проект был запущен мной в 2021 году), но это приложение имеет свои особенности которые и подтолкнули меня к созданию этого решения
+
+- [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview)
+- [SWR](https://swr.vercel.app)
+- [React Router](https://reactrouter.com/start/framework/data-loading)
+
+## Предпосылки
+
+Хотел получить механизм единой загрузки данных, чтобы избавиться от необходимости `if/else` с лоудером
+
+Пример:
 
 ```tsx
-const About = () => <div>About</div>;
+const Page = () => {
+  const {profile, isLoadingProfile} = useProfile();
+  const {todoList, isLoadingToDoList} = useToDoList();
 
-export default About;
+  if (isLoadingProfile) {
+    return <div>Loading...</div>;
+  }
+
+  if (isLoadingToDoList) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div>
+      <div>{profile.name}</div>
+      <ul>
+        {todoList.map((todo) => (
+          <li>{todo.title}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 ```
 
-[**Next.js – Pages**](https://nextjs.org/docs/basic-features/pages)
+На момент 2020-2021 годов ещё не было React Router v6, а о существовании `swr` и `@tanstack/react-query` я не знал. Судя по npmjs.com они только появлялись и набирали популярность. Мне понравился подход Next.js с загрузкой данных через функцию `getInitialProps` (сейчас так уже не делают), который я и решил повторить
 
-## Data Fetching
-
-**pages/Blog.page.tsx**
+В итоге получился вот такой подход
 
 ```tsx
+// pages/TodoList.tsx
+const TodoList = ({
+  profile,
+  todoList
+}) => (
+  <div>
+    <div>{profile.name}</div>
+    <ul>
+      {todoList.map((todo) => (
+        <li>{todo.title}</li>
+      ))}
+    </ul>
+  </div>
+)
 
-const Blog = ({ posts }) => <ul>
-  {posts.map((post) => (
-    <li>{post.title}</li>
-  ))}
-</ul>;
+export async function getInitialProps() {
+  const profileResponse = await fetch("https://.../profile");
+  const todoListResponse = await fetch("https://.../todolist");
 
-export async function getStaticProps() {
-  const res = await fetch('https://.../posts')
-  const posts = await res.json()
-
-  return { props: { posts } };
+  return {
+    props: {
+      profile: await profileResponse.json(),
+      todoList: await todoListResponse.json()
+    }
+  };
 }
 
-export default Blog
-```
+export default Page;
 
-[**Next.js – Data Fetching**](https://nextjs.org/docs/basic-features/data-fetching)
+// pages/index.tsx
+const TodoList = lazyPage(() => import("./TodoList"));
 
-## Usage
-
-**App.tsx**
-
-```tsx
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import { lazyPage } from 'react-lazy-page';
-import { Suspense } from 'react';
-
-export const App = (): JSX.Element => <BrowserRouter>
+const App = () => (
   <Suspense fallback={<div>Loading...</div>}>
-    <Switch>
-      <Route path={'/about'} component={lazyPage(() => import('./pages/About.page'))} exact/>
-      <Route path={'/blog'} component={lazyPage(() => import('./pages/Blog.page'))} exact/>
-    </Switch>
+    <TodoList />
   </Suspense>
-</BrowserRouter>;
+)
 ```
-
-## TODO
-
-- [ ] Write **documentation**
-- [ ] **Publish** a package
 
 ## License
 
